@@ -14,6 +14,7 @@ SAMPLE_DATE_MENTA_3 = '230316'
 CARMEN = 'carmen'
 MENTA = 'menta'
 PENNY = 'penny'
+THRESHOLD = 32764
 
 def labelMonkeyDF(monkey_area1, monkey_area2, monkey_area3, monkey_area4):
     """
@@ -176,6 +177,56 @@ def countSaturation(df):
             else:
                 saturation[percent]+=1
     return saturation
+
+def getSaturated(df):
+    """
+    find all the signals that have above 5% of saturated bins and the signals that have set of above 20 neighbors that
+    are above the threshold
+    """
+    signals = []
+    for x in tqdm(df["signal"]):
+        counter = 0
+        for i in x:
+            if i >= THRESHOLD:
+                counter += 1
+        percent = (counter / 8000) * 100
+        if percent >= 5:
+            signals.append(x)
+    for x in tqdm(df["signal"]):
+        x = np.array(x, dtype=np.int64)
+        set_neigboring = set()
+        counter = 0
+        neighbor = 0
+        count_neigbor = 0
+        for i in x:
+            if np.abs(i) >= THRESHOLD:
+                counter += 1
+                if np.abs(i - neighbor) < 10:
+                    count_neigbor += 1
+                else:
+                    set_neigboring.add(count_neigbor)
+                    count_neigbor = 1
+            neighbor = i
+            if i == len(x) - 1:
+                set_neigboring.add(count_neigbor)
+        if len(set_neigboring) > 0:
+            if max(set_neigboring) >= 20:
+                signals.append(x)
+
+    return signals
+
+def deleteFromDF(df, lst):
+    """
+    deletes from df signals
+    """
+    print(lst)
+    if len(lst) > 0:
+        drop_indexes = df[df['signal'].isin(lst)].index
+        new_df = df.drop(index=drop_indexes)
+    else:
+        new_df = df
+    return new_df.to_numpy(), len(new_df["signal"])
+
 
 lst1_penny = np.load('area_1_penny_divided_6349_signals.npy', allow_pickle=True)
 lst2_penny = np.load('area_2_penny_divided_30496_signals.npy', allow_pickle=True)
