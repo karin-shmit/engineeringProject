@@ -1,6 +1,7 @@
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
+from sklearn.feature_selection import mutual_info_classif
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -25,11 +26,20 @@ def extract_feature(X):
     return mfccs, chroma, mel, shannon, sample, per,fft
 
 def getAllFeaturesVector(area):
+    """
+    length of features:
+    mfccs : 40 [0:39]
+    chroma : 12 [40:51]
+    mel : 128 [52:179]
+    shannon : 1 [180:180]
+    sample : 1 [181:181]
+    per : 1 [182:182]
+    fft : 1142 [183:1324]
+    """
     features = []
     for x in tqdm(area):
-        feature = np.array([])
         mfccs, chroma, mel, shannon, sample, per, fft = extract_feature(x)
-        feature = np.concatenate((feature,mfccs,chroma,mel,shannon, sample, per, fft))
+        feature = np.concatenate((mfccs,chroma,mel,shannon, sample, per, fft))
         features.append(feature)
     return features
 
@@ -129,10 +139,10 @@ def plotAllVectorFeatures3Dpca(vector1, vector2, vector3, vector4, monkey):
     plt.show()
 
 def plotAllVectorFeatures3Dtsne(vector1, vector2, vector3, vector4, monkey):
-    x_1, y_1, z_1 = getTNSE3D(vector1)
-    x_2, y_2, z_2 = getTNSE3D(vector2)
-    x_3, y_3, z_3 = getTNSE3D(vector3)
-    x_4, y_4, z_4 = getTNSE3D(vector4)
+    x_1, y_1, z_1 = getTSNE3D(vector1)
+    x_2, y_2, z_2 = getTSNE3D(vector2)
+    x_3, y_3, z_3 = getTSNE3D(vector3)
+    x_4, y_4, z_4 = getTSNE3D(vector4)
     ax = plt.axes(projection="3d")
     ax.scatter3D(x_1, y_1, z_1 , color="maroon", label="area_" + str(1))
     ax.scatter3D(x_2, y_2, z_2, color="navy", label="area_" + str(2))
@@ -196,6 +206,38 @@ def plotTSNEallFeaturesVector(area1, area2, area3, area4, monkey):
     plt.legend()
     plt.show()
 
+def getMutualInfo(area1, area2, area3, area4, monkey):
+    feature1 = getAllFeaturesVector(area1)
+    feature2 = getAllFeaturesVector(area2)
+    feature3 = getAllFeaturesVector(area3)
+    feature4 = getAllFeaturesVector(area4)
+    feature_matrix = np.concatenate((feature1, feature2, feature3, feature4))
+
+    area1 = [0] * 100
+    area2 = [1] * 100
+    area3 = [2] * 100
+    area4 = [3] * 100
+    areas = area1 + area2 + area3 + area4
+
+    mi = mutual_info_classif(feature_matrix, areas, discrete_features=False)
+    index1 = np.argmax(mi)
+    old = mi[index1]
+    mi[index1] = -1
+    index2 = np.argmax(mi)
+
+    mi[index1] = old
+
+    plt.scatter(range(len(mi)), mi)
+    plt.xlabel("feature index")
+    plt.ylabel("mutual info")
+    plt.title(monkey)
+    plt.show()
+
+    print(index1)
+    print(index2)
+
+
+
 
 lst1_penny = np.load('area_1_penny_random_samples.npy', allow_pickle=True)
 lst2_penny = np.load('area_2_penny_random_samples.npy', allow_pickle=True)
@@ -222,6 +264,11 @@ lst4_menta = np.load('area_4_menta_random_samples.npy', allow_pickle=True)
 # plotPCAallFeaturesVector(lst1_penny, lst2_penny, lst3_penny, lst4_penny, "penny")
 # plotPCAallFeaturesVector(lst1_menta, lst2_menta, lst3_menta, lst4_menta, "menta")
 #
-plotTSNEallFeaturesVector(lst1_carmen, lst2_carmen, lst3_carmen, lst4_carmen, "carmen")
-plotTSNEallFeaturesVector(lst1_menta, lst2_menta, lst3_menta, lst4_menta, "menta")
-plotTSNEallFeaturesVector(lst1_penny, lst2_penny, lst3_penny, lst4_penny, "penny")
+# plotTSNEallFeaturesVector(lst1_carmen, lst2_carmen, lst3_carmen, lst4_carmen, "carmen")
+# plotTSNEallFeaturesVector(lst1_menta, lst2_menta, lst3_menta, lst4_menta, "menta")
+# plotTSNEallFeaturesVector(lst1_penny, lst2_penny, lst3_penny, lst4_penny, "penny")
+
+
+# getMutualInfo(lst1_carmen, lst2_carmen, lst3_carmen, lst4_carmen, "carmen") # 183 64 | 1st feature of fft, 13th feature of mel
+getMutualInfo(lst1_menta, lst2_menta, lst3_menta, lst4_menta, "menta") # 59 57 | 8th feature of mel, 6th feature of mel
+# getMutualInfo(lst1_penny, lst2_penny, lst3_penny, lst4_penny, "penny") # 64 183 | 13 feature of mel, 1st feature of fft
