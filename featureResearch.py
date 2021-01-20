@@ -11,6 +11,16 @@ from pyentrp import entropy as ent
 
 SAMPLE_RATE = 1000
 
+def labelMonkeyDF(monkey_area1, monkey_area2, monkey_area3, monkey_area4):
+    """
+    :return: labeled monkeys data frame
+    """
+    df1 = pd.DataFrame({'signal': monkey_area1[:, 0], 'brain_area': monkey_area1[:, 1], 'depth': monkey_area1[:, 2],'date': monkey_area1[:, 3]})
+    df2 = pd.DataFrame({'signal': monkey_area2[:, 0], 'brain_area': monkey_area2[:, 1], 'depth': monkey_area2[:, 2],'date': monkey_area2[:, 3]})
+    df3 = pd.DataFrame({'signal': monkey_area3[:, 0], 'brain_area': monkey_area3[:, 1], 'depth': monkey_area3[:, 2],'date': monkey_area3[:, 3]})
+    df4 = pd.DataFrame({'signal': monkey_area4[:, 0], 'brain_area': monkey_area4[:, 1], 'depth': monkey_area4[:, 2],'date': monkey_area4[:, 3]})
+    return df1, df2, df3, df4
+
 def extract_feature(X):
     X = X.astype(float)
     stft = np.abs(librosa.stft(X))
@@ -213,11 +223,11 @@ def getMutualInfo(area1, area2, area3, area4, monkey):
     feature4 = getAllFeaturesVector(area4)
     feature_matrix = np.concatenate((feature1, feature2, feature3, feature4))
 
-    area1 = [0] * 100
-    area2 = [1] * 100
-    area3 = [2] * 100
-    area4 = [3] * 100
-    areas = area1 + area2 + area3 + area4
+    area1_y = [0] * len(area1)
+    area2_y = [1] * len(area2)
+    area3_y = [2] * len(area3)
+    area4_y = [3] * len(area4)
+    areas = area1_y + area2_y + area3_y + area4_y
 
     mi = mutual_info_classif(feature_matrix, areas, discrete_features=False)
     index1 = np.argmax(mi)
@@ -236,23 +246,65 @@ def getMutualInfo(area1, area2, area3, area4, monkey):
     print(index1)
     print(index2)
 
+def getMonkeyBestFeaturesPlot(area1,area2,area3,area4, first, second,xlab, ylab, monkey):
+    feature1 = np.array(getAllFeaturesVector(area1))
+    best1 = np.log10(feature1[:, first])
+    secBest1 = feature1[:, second]
+    feature2 = np.array(getAllFeaturesVector(area2))
+    best2 = np.log10(feature2[:, first])
+    secBest2 = feature2[:, second]
+    feature3 = np.array(getAllFeaturesVector(area3))
+    best3 = np.log10(feature3[:, first])
+    secBest3 = feature3[:, second]
+    feature4 = np.array(getAllFeaturesVector(area4))
+    best4 = np.log10(feature4[:, first])
+    secBest4 = feature4[:, second]
+    plt.scatter(best1, secBest1, color="maroon", label="area1")
+    plt.scatter(best2, secBest2, color='navy', label="area2")
+    plt.scatter(best3, secBest3, color='green', label="area3")
+    plt.scatter(best4, secBest4, color='purple', label="area4")
+    plt.xlabel(xlab)
+    plt.ylabel(ylab)
+    plt.title(monkey)
+    plt.legend()
+    plt.show()
 
 
 
-lst1_penny = np.load('area_1_penny_random_samples.npy', allow_pickle=True)
-lst2_penny = np.load('area_2_penny_random_samples.npy', allow_pickle=True)
-lst3_penny = np.load('area_3_penny_random_samples.npy', allow_pickle=True)
-lst4_penny = np.load('area_4_penny_random_samples.npy', allow_pickle=True)
+lst1_penny = np.load('random\\area_1_penny_random_samples.npy', allow_pickle=True)
+lst2_penny = np.load('random\\area_2_penny_random_samples.npy', allow_pickle=True)
+lst3_penny = np.load('random\\area_3_penny_random_samples.npy', allow_pickle=True)
+lst4_penny = np.load('random\\area_4_penny_random_samples.npy', allow_pickle=True)
 
-lst1_carmen = np.load('area_1_carmen_random_samples.npy', allow_pickle=True)
-lst2_carmen = np.load('area_2_carmen_random_samples.npy', allow_pickle=True)
-lst3_carmen = np.load('area_3_carmen_random_samples.npy', allow_pickle=True)
-lst4_carmen = np.load('area_4_carmen_random_samples.npy', allow_pickle=True)
+# lst1_penny = np.load('filtered\\area_1_penny_filtered_6331_signals.npy', allow_pickle=True)
+# lst2_penny = np.load('filtered\\area_2_penny_filtered_30472_signals.npy', allow_pickle=True)
+# lst3_penny = np.load('filtered\\area_3_penny_filtered_2298_signals.npy', allow_pickle=True)
+# lst4_penny = np.load('filtered\\area_4_penny_filtered_1780_signals.npy', allow_pickle=True)
 
-lst1_menta = np.load('area_1_menta_random_samples.npy', allow_pickle=True)
-lst2_menta = np.load('area_2_menta_random_samples.npy', allow_pickle=True)
-lst3_menta = np.load('area_3_menta_random_samples.npy', allow_pickle=True)
-lst4_menta = np.load('area_4_menta_random_samples.npy', allow_pickle=True)
+lst1_carmen = np.load('random\\area_1_carmen_random_samples.npy', allow_pickle=True)
+lst2_carmen = np.load('random\\area_2_carmen_random_samples.npy', allow_pickle=True)
+lst3_carmen = np.load('random\\area_3_carmen_random_samples.npy', allow_pickle=True)
+lst4_carmen = np.load('random\\area_4_carmen_random_samples.npy', allow_pickle=True)
+
+# lst1_carmen = np.load('filtered\\area_1_carmen_filtered_25359_signals.npy',allow_pickle=True)
+# lst2_carmen = np.load('filtered\\area_2_carmen_filtered_52617_signals.npy',allow_pickle=True)
+# lst3_carmen = np.load('filtered\\area_3_carmen_filtered_12431_signals.npy',allow_pickle=True)
+# lst4_carmen = np.load('filtered\\area_4_carmen_filtered_7168_signals.npy',allow_pickle=True)
+
+lst1_menta = np.load('random\\area_1_menta_random_samples.npy', allow_pickle=True)
+lst2_menta = np.load('random\\area_2_menta_random_samples.npy', allow_pickle=True)
+lst3_menta = np.load('random\\area_3_menta_random_samples.npy', allow_pickle=True)
+lst4_menta = np.load('random\\area_4_menta_random_samples.npy', allow_pickle=True)
+
+# lst1_menta = np.load('filtered\\area_1_menta_filtered_30408_signals.npy', allow_pickle=True)
+# lst2_menta = np.load('filtered\\area_2_menta_filtered_47582_signals.npy', allow_pickle=True)
+# lst3_menta = np.load('filtered\\area_3_menta_filtered_20016_signals.npy', allow_pickle=True)
+# lst4_menta = np.load('filtered\\area_4_menta_filtered_4109_signals.npy', allow_pickle=True)
+
+# df1_m, df2_m,df3_m,df4_m = labelMonkeyDF(lst1_menta,lst2_menta,lst3_menta,lst4_menta)
+# df1_p, df2_p,df3_p,df4_p = labelMonkeyDF(lst1_penny,lst2_penny,lst3_penny,lst4_penny)
+# df1_c, df2_c,df3_c,df4_c = labelMonkeyDF(lst1_carmen,lst2_carmen,lst3_carmen,lst4_carmen)
+
 
 # plotPCAfeature(lst1_penny, lst2_penny, lst3_penny, lst4_penny,'penny')
 # plotPCAfeature(lst1_carmen, lst2_carmen, lst3_carmen, lst4_carmen,'carmen')
@@ -269,6 +321,15 @@ lst4_menta = np.load('area_4_menta_random_samples.npy', allow_pickle=True)
 # plotTSNEallFeaturesVector(lst1_penny, lst2_penny, lst3_penny, lst4_penny, "penny")
 
 
-# getMutualInfo(lst1_carmen, lst2_carmen, lst3_carmen, lst4_carmen, "carmen") # 183 64 | 1st feature of fft, 13th feature of mel
-getMutualInfo(lst1_menta, lst2_menta, lst3_menta, lst4_menta, "menta") # 59 57 | 8th feature of mel, 6th feature of mel
-# getMutualInfo(lst1_penny, lst2_penny, lst3_penny, lst4_penny, "penny") # 64 183 | 13 feature of mel, 1st feature of fft
+# getMutualInfo(df1_c["signal"], df2_c["signal"], df3_c["signal"], df4_c["signal"], "carmen") # 183 55
+# getMutualInfo(df1_m["signal"], df2_m["signal"], df3_m["signal"], df4_m["signal"], "menta") # 183, 57
+# getMutualInfo(df1_p["signal"], df2_p["signal"], df3_p["signal"], df4_p["signal"], "penny") # 64 183
+
+# getMonkeyBestFeaturesPlot(lst1_carmen, lst2_carmen, lst3_carmen, lst4_carmen, 183, 55 ,"1st feature of fft", "55th feature of mel", "carmen")
+# getMonkeyBestFeaturesPlot(lst1_menta, lst2_menta, lst3_menta, lst4_menta, 183, 57, "1st feature of fft" , "57th feature of mel","menta")
+getMonkeyBestFeaturesPlot(lst1_penny, lst2_penny, lst3_penny, lst4_penny, 64, 183, "13 feature of mel", "1st feature of fft", "penny")
+
+
+
+
+
