@@ -1,3 +1,4 @@
+from scipy.signal import welch
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
@@ -7,9 +8,12 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from tqdm import tqdm
 import librosa
+import sys
+import entropy as en
 from pyentrp import entropy as ent
 
 SAMPLE_RATE = 1000
+eps = sys.float_info.epsilon
 
 def labelMonkeyDF(monkey_area1, monkey_area2, monkey_area3, monkey_area4):
     """
@@ -29,11 +33,79 @@ def extract_feature(X):
     mel = np.mean(librosa.feature.melspectrogram(X, sr=SAMPLE_RATE).T, axis=0)
     shannon = [ent.shannon_entropy(X)]
     sample = ent.sample_entropy(X, 1)
+    spectral = [np.round(spectral_entropy(X, SAMPLE_RATE), 2)]
     per = [ent.permutation_entropy(X)]
+    energy_ent = [energy_entropy(X)]
+    energy_sig = [energy(X)]
+    zero_cross = [zero_crossing_rate(X)]
+    f, psd = welch(X, nfft=1024, fs=SAMPLE_RATE, noverlap=896, nperseg=1024)
     fft = np.fft.fft(X) / len(X)
     fft = np.abs(fft[: len(X) // 7])
+    fft = [fft[0]]
 
-    return mfccs, chroma, mel, shannon, sample, per,fft
+    return np.concatenate((mfccs, chroma, mel, shannon, sample, spectral,per,energy_ent, energy_sig, zero_cross, psd, chroma, fft))
+
+def energy_entropy(frame, n_short_blocks=10):
+    """Computes entropy of energy"""
+    # total frame energy
+    frame_energy = np.sum(frame ** 2)
+    frame_length = len(frame)
+    sub_win_len = int(np.floor(frame_length / n_short_blocks))
+    if frame_length != sub_win_len * n_short_blocks:
+        frame = frame[0:sub_win_len * n_short_blocks]
+
+    # sub_wins is of size [n_short_blocks x L]
+    sub_wins = frame.reshape(sub_win_len, n_short_blocks, order='F').copy()
+
+    # Compute normalized sub-frame energies:
+    s = np.sum(sub_wins ** 2, axis=0) / (frame_energy + eps)
+
+    # Compute entropy of the normalized sub-frame energies:
+    entropy = -np.sum(s * np.log2(s + eps))
+    return entropy
+
+def spectral_entropy(signal, n_short_blocks=10):
+    """Computes the spectral entropy"""
+    # number of frame samples
+    num_frames = len(signal)
+
+    # total spectral energy
+    total_energy = np.sum(signal ** 2)
+
+    # length of sub-frame
+    sub_win_len = int(np.floor(num_frames / n_short_blocks))
+    if num_frames != sub_win_len * n_short_blocks:
+        signal = signal[0:sub_win_len * n_short_blocks]
+
+    # define sub-frames (using matrix reshape)
+    sub_wins = signal.reshape(sub_win_len, n_short_blocks, order='F').copy()
+
+    # compute spectral sub-energies
+    s = np.sum(sub_wins ** 2, axis=0) / (total_energy + eps)
+
+    # compute spectral entropy
+    entropy = -np.sum(s * np.log2(s + eps))
+
+    return entropy
+
+
+def energy(frame):
+    """Computes signal energy of frame"""
+    return np.sum(frame ** 2) / np.float64(len(frame))
+
+def zero_crossing_rate(frame):
+    """Computes zero crossing rate of frame"""
+    count = len(frame)
+    count_zero = np.sum(np.abs(np.diff(np.sign(frame)))) / 2
+    return np.float64(count_zero) / np.float64(count - 1.0)
+
+
+def dc_normalize(signal):
+    """Removes DC and normalizes to -1, 1 range"""
+    norm = signal.copy().astype(np.float64)
+    norm -= norm.mean()
+    norm /= abs(norm).max() + 1e-10
+    return norm
 
 def getAllFeaturesVector(area):
     """
@@ -327,7 +399,7 @@ lst4_menta = np.load('random\\area_4_menta_random_samples.npy', allow_pickle=Tru
 
 # getMonkeyBestFeaturesPlot(lst1_carmen, lst2_carmen, lst3_carmen, lst4_carmen, 183, 55 ,"1st feature of fft", "55th feature of mel", "carmen")
 # getMonkeyBestFeaturesPlot(lst1_menta, lst2_menta, lst3_menta, lst4_menta, 183, 57, "1st feature of fft" , "57th feature of mel","menta")
-getMonkeyBestFeaturesPlot(lst1_penny, lst2_penny, lst3_penny, lst4_penny, 64, 183, "13 feature of mel", "1st feature of fft", "penny")
+# getMonkeyBestFeaturesPlot(lst1_penny, lst2_penny, lst3_penny, lst4_penny, 64, 183, "13 feature of mel", "1st feature of fft", "penny")
 
 
 
