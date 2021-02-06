@@ -35,7 +35,6 @@ def shared_dates_level(lst_dates):
     dates_shared_2 = []
     dates_shared_3 = []
     dates_shared_4 = []
-    dates_shared = []
     for column in lst_dates:
         y = lst_dates[column]
         y = y.notna()

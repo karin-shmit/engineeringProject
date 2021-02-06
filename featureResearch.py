@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 import librosa
 import sys
-import entropy as en
+# import entropy as en
 from pyentrp import entropy as ent
 
 SAMPLE_RATE = 1000
@@ -342,31 +342,31 @@ def getMonkeyBestFeaturesPlot(area1,area2,area3,area4, first, second,xlab, ylab,
     plt.show()
 
 
-
-lst1_penny = np.load('random\\area_1_penny_random_samples.npy', allow_pickle=True)
-lst2_penny = np.load('random\\area_2_penny_random_samples.npy', allow_pickle=True)
-lst3_penny = np.load('random\\area_3_penny_random_samples.npy', allow_pickle=True)
-lst4_penny = np.load('random\\area_4_penny_random_samples.npy', allow_pickle=True)
+#
+# lst1_penny = np.load('random\\area_1_penny_random_samples.npy', allow_pickle=True)
+# lst2_penny = np.load('random\\area_2_penny_random_samples.npy', allow_pickle=True)
+# lst3_penny = np.load('random\\area_3_penny_random_samples.npy', allow_pickle=True)
+# lst4_penny = np.load('random\\area_4_penny_random_samples.npy', allow_pickle=True)
 
 # lst1_penny = np.load('filtered\\area_1_penny_filtered_6331_signals.npy', allow_pickle=True)
 # lst2_penny = np.load('filtered\\area_2_penny_filtered_30472_signals.npy', allow_pickle=True)
 # lst3_penny = np.load('filtered\\area_3_penny_filtered_2298_signals.npy', allow_pickle=True)
 # lst4_penny = np.load('filtered\\area_4_penny_filtered_1780_signals.npy', allow_pickle=True)
 
-lst1_carmen = np.load('random\\area_1_carmen_random_samples.npy', allow_pickle=True)
-lst2_carmen = np.load('random\\area_2_carmen_random_samples.npy', allow_pickle=True)
-lst3_carmen = np.load('random\\area_3_carmen_random_samples.npy', allow_pickle=True)
-lst4_carmen = np.load('random\\area_4_carmen_random_samples.npy', allow_pickle=True)
+# lst1_carmen = np.load('random\\area_1_carmen_random_samples.npy', allow_pickle=True)
+# lst2_carmen = np.load('random\\area_2_carmen_random_samples.npy', allow_pickle=True)
+# lst3_carmen = np.load('random\\area_3_carmen_random_samples.npy', allow_pickle=True)
+# lst4_carmen = np.load('random\\area_4_carmen_random_samples.npy', allow_pickle=True)
 
 # lst1_carmen = np.load('filtered\\area_1_carmen_filtered_25359_signals.npy',allow_pickle=True)
 # lst2_carmen = np.load('filtered\\area_2_carmen_filtered_52617_signals.npy',allow_pickle=True)
 # lst3_carmen = np.load('filtered\\area_3_carmen_filtered_12431_signals.npy',allow_pickle=True)
 # lst4_carmen = np.load('filtered\\area_4_carmen_filtered_7168_signals.npy',allow_pickle=True)
 
-lst1_menta = np.load('random\\area_1_menta_random_samples.npy', allow_pickle=True)
-lst2_menta = np.load('random\\area_2_menta_random_samples.npy', allow_pickle=True)
-lst3_menta = np.load('random\\area_3_menta_random_samples.npy', allow_pickle=True)
-lst4_menta = np.load('random\\area_4_menta_random_samples.npy', allow_pickle=True)
+# lst1_menta = np.load('random\\area_1_menta_random_samples.npy', allow_pickle=True)
+# lst2_menta = np.load('random\\area_2_menta_random_samples.npy', allow_pickle=True)
+# lst3_menta = np.load('random\\area_3_menta_random_samples.npy', allow_pickle=True)
+# lst4_menta = np.load('random\\area_4_menta_random_samples.npy', allow_pickle=True)
 
 # lst1_menta = np.load('filtered\\area_1_menta_filtered_30408_signals.npy', allow_pickle=True)
 # lst2_menta = np.load('filtered\\area_2_menta_filtered_47582_signals.npy', allow_pickle=True)
