@@ -31,25 +31,21 @@ def extract_mel_chroma_first_fft_feature(X):
     welch = nk.signal_psd(X, method="welch", min_frequency=1, max_frequency=20, show=True)["Power"]
     multitaper = nk.signal_psd(X, method="multitapers", max_frequency=20, show=True)["Power"]
     lomb = nk.signal_psd(X, method="lomb", min_frequency=1, max_frequency=20, show=True)["Power"]
-    # burg = nk.signal_psd(X, method="burg", min_frequency=1, max_frequency=20, order=10, show=True)["Power"]
     welch = np.array(welch)
     multitaper = np.array(multitaper)
-    # lomb = np.array(lomb)
-    # burg = np.array(burg)
-    # print("chroma:", len(chroma))
-    # print("mel:", len(mel))
-    # print("fft:", len(fft))
-    return chroma, mel, fft, welch, multitaper
-    # return chroma, mel, fft, welch, multitaper, lomb, burg
+    cor = np.corrcoef(X, X)
+    cor = np.array([cor[0][1], cor[1][0]])
+    return chroma, mel, fft, welch, multitaper, cor
 
 
 def extract_additional_feature(X):
     X = X.astype(float)
     # burg = nk.signal_psd(X, method="burg", min_frequency=1, max_frequency=20, order=10, show=True)["Power"]
-    sample = nk.entropy_sample(X)
-    entropy = nk.entropy_approximate(X)
+    # sample = nk.entropy_sample(X)
+    # entropy = nk.entropy_approximate(X)
+    cor = np.corrcoef(X, X)
     # burg = np.array(burg)
-    y = np.array([sample, entropy])
+    y = np.array([cor[0][1], cor[1][0]])
     return y
 
 
@@ -74,7 +70,7 @@ def get_mel_chroma_first_fft_features_vector(area):
     """
     features = []
     for x in tqdm(area):
-        chroma, mel, fft, welch, multitaper= extract_mel_chroma_first_fft_feature(x)
+        chroma, mel, fft, welch, multitaper, cor = extract_mel_chroma_first_fft_feature(x)
         feature = np.concatenate((chroma, mel, fft, welch, multitaper))
         features.append(feature)
     return np.array(features)
@@ -158,7 +154,7 @@ def linearSVC(x_train, y_train, x_test, y_test):
 
 
 def randomForest(x_train, y_train, x_test, y_test):
-    """Random Forest Accuracy: 0.6495348837209303"""
+    """Random Forest Accuracy: 0.651860465116279"""
     # clf = RandomForestClassifier(max_depth=13)
     clf = RandomForestClassifier(
         min_samples_leaf=50,
@@ -182,7 +178,10 @@ def GradientBoosting(x_train, y_train, x_test, y_test):
 
 
 def KNeighbors(x_train, y_train, x_test, y_test):
-    clf = KNeighborsClassifier()
+    """
+    KNeighbors Accuracy: 0.6909302325581396
+    """
+    clf = KNeighborsClassifier(n_neighbors=18)
     clf.fit(x_train, y_train)
     y_pred = clf.predict(x_test)
     print("KNeighbors Accuracy:", metrics.accuracy_score(y_test, y_pred))
@@ -242,86 +241,151 @@ def getFeaturesAndNormalize(data):
     return np.array(features)
 
 
-def resize_features_vector(data1, data2):
+def resize_features_vector(data1, data2, area_num):
     resize_data = np.concatenate((data1, data2), axis=1)
     np.save(
-        "train_short\\carmen\\" + 'area_' + str(1) + '_' + "carmen" + '_features_extra_validation_' + str(
+        "train_short\\carmen\\" + 'area_' + str(area_num) + '_' + "carmen" + '_features_extra_validation_' + str(
             len(resize_data)) + '_signals.npy',
         np.array(resize_data))
 
 
+# x_train1 = get_mel_chroma_first_fft_features_vector(f.sig_train_carmen1)
+# np.save(
+#     "train_short\\carmen\\" + 'area_' + str(1) + '_' + "carmen"+ '_features_extra_validation_' + str(len(x_train1)) + '_signals.npy',
+#     np.array(x_train1))
+#
+# x_train2 = get_mel_chroma_first_fft_features_vector(f.sig_train_carmen2)
+# np.save(
+#     "train_short\\carmen\\" + 'area_' + str(2) + '_' + "carmen"+ '_features_extra_validation_' + str(len(x_train2)) + '_signals.npy',
+#     np.array(x_train2))
+
+# x_train3 = get_mel_chroma_first_fft_features_vector(f.sig_train_carmen3)
+# np.save(
+#     "train_short\\carmen\\" + 'area_' + str(3) + '_' + "carmen"+ '_features_extra_validation_' + str(len(x_train3)) + '_signals.npy',
+#     np.array(x_train3))
+# x_train4 = get_mel_chroma_first_fft_features_vector(f.sig_train_carmen4)
+# np.save(
+#     "train_short\\carmen\\" + 'area_' + str(4) + '_' + "carmen"+ '_features_extra_validation_' + str(len(x_train4)) + '_signals.npy',
+#     np.array(x_train4))
+
+# x_test1 = get_mel_chroma_first_fft_features_vector(f.sig_valid_carmen_1)
+# x_test2 = get_mel_chroma_first_fft_features_vector(f.sig_valid_carmen_2)
+# x_test3 = get_mel_chroma_first_fft_features_vector(f.sig_valid_carmen_3)
+# x_test4 = get_mel_chroma_first_fft_features_vector(f.sig_valid_carmen_4)
+# save_data(x_test1, x_test2, x_test3, x_test4, "test_short\\carmen\\", "carmen")
+# x = np.random.randint(0, 50, 1000)
 
 #
-
+# # Negative Correlation with some noise
+# y = 100 - x + np.random.normal(0, 5, 1000)
+# m = np.corrcoef(x, y)
+# print(m[0][1])
+# print(m[1][0])
+# print(x[0][1])
+# print(x[1][0])
+# signal = f.sig_valid_carmen_4[0]
+# _, rpeaks = nk.ecg_peaks(signal, sampling_rate=1000)
+# print(rpeaks)
 # #
 # x_train1 = get_additional_features(f.sig_train_carmen1)
 # np.save(
-#     "train_short\\carmen\\entropy\\" + 'area_' + str(1) + '_' + "carmen"+ '_features_extra_validation_' + str(len(x_train1)) + '_signals.npy',
+#     "train_short\\carmen\\cor\\" + 'area_' + str(1) + '_' + "carmen"+ '_features_extra_validation_' + str(len(x_train1)) + '_signals.npy',
 #     np.array(x_train1))
 # x_train2 = get_additional_features(f.sig_train_carmen2)
 # np.save(
-#     "train_short\\carmen\\entropy\\" + 'area_' + str(2) + '_' + "carmen"+ '_features_extra_validation_' + str(len(x_train2)) + '_signals.npy',
+#     "train_short\\carmen\\cor\\" + 'area_' + str(2) + '_' + "carmen"+ '_features_extra_validation_' + str(len(x_train2)) + '_signals.npy',
 #     np.array(x_train2))
 # x_train3 = get_additional_features(f.sig_train_carmen3)
 # np.save(
-#     "train_short\\carmen\\entropy\\" + 'area_' + str(3) + '_' + "carmen"+ '_features_extra_validation_' + str(len(x_train3)) + '_signals.npy',
+#     "train_short\\carmen\\cor\\" + 'area_' + str(3) + '_' + "carmen"+ '_features_extra_validation_' + str(len(x_train3)) + '_signals.npy',
 #     np.array(x_train3))
 # x_train4 = get_additional_features(f.sig_train_carmen4)
 # np.save(
-#     "train_short\\carmen\\entropy\\" + 'area_' + str(4) + '_' + "carmen"+ '_features_extra_validation_' + str(len(x_train4)) + '_signals.npy',
+#     "train_short\\carmen\\cor\\" + 'area_' + str(4) + '_' + "carmen"+ '_features_extra_validation_' + str(len(x_train4)) + '_signals.npy',
 #     np.array(x_train4))
 # save_data(x_train1, x_train2, x_train3, x_train4, "train_short\\carmen\\", "carmen")
-x_test1 = get_additional_features(f.sig_test_carmen1)
-x_test2 = get_additional_features(f.sig_test_carmen2)
-x_test3 = get_additional_features(f.sig_test_carmen3)
-x_test4 = get_additional_features(f.sig_test_carmen4)
-save_data(x_test1, x_test2, x_test3, x_test4, "test_short\\carmen\\entropy\\", "carmen")
+# x_test1 = get_additional_features(f.sig_test_carmen1)
+# x_test2 = get_additional_features(f.sig_test_carmen2)
+# x_test3 = get_additional_features(f.sig_test_carmen3)
+# x_test4 = get_additional_features(f.sig_test_carmen4)
+# save_data(x_test1, x_test2, x_test3, x_test4, "test_short\\carmen\\cor\\", "carmen")
 #
 # #
-# if __name__ == "__main__":
-# #     signal = f.sig_valid_carmen_1[0]
-# #     # parameters = nk.complexity_optimize(signal, show=True)
-# #     # print(parameters)
-# #     ci_min, ci_max = nk.hdi(signal, ci=0.95, show=True)
-# #     # print(ci_min)
-# #     # print(ci_max)
-# #     print(np.array([ci_max, ci_min]))
-#     train_1 = np.concatenate((f.short_train1_carmen, f.add_short_train1_carmen), axis=1)
-#     train_2 = np.concatenate((f.short_train2_carmen, f.add_short_train2_carmen), axis=1)
-#     train_3 = np.concatenate((f.short_train3_carmen, f.add_short_train3_carmen), axis=1)
-#     train_4 = np.concatenate((f.short_train4_carmen, f.add_short_train4_carmen), axis=1)
-#
-#     test_1 = np.concatenate((f.short_test1_carmen, f.add_short_test1_carmen), axis=1)
-#     test_2 = np.concatenate((f.short_test2_carmen, f.add_short_test2_carmen), axis=1)
-#     test_3 = np.concatenate((f.short_test3_carmen, f.add_short_test3_carmen), axis=1)
-#     test_4 = np.concatenate((f.short_test4_carmen, f.add_short_test4_carmen), axis=1)
-#
-#     # x_train = getX(f.short_train1_carmen, f.short_train2_carmen, f.short_train3_carmen, f.short_train4_carmen)
-#     # y_train = getY(f.short_train1_carmen, f.short_train2_carmen, f.short_train3_carmen, f.short_train4_carmen)
-#     x_train = getX(train_1, train_2, train_3, train_4)
-#     y_train = getY(train_1, train_2, train_3, train_4)
-#
-#     x_test = getX(test_1, test_2, test_3, test_4)
-#     y_test = getY(test_1, test_2, test_3, test_4)
-# # #     # #     #
-# #     x_test = getX(f.short_test1_carmen, f.short_test2_carmen, f.short_test3_carmen, f.short_test4_carmen)
-# #     y_test = getY(f.short_test1_carmen, f.short_test2_carmen, f.short_test3_carmen, f.short_test4_carmen)
+if __name__ == "__main__":
+    # train_1 = np.concatenate((f.short_train1_carmen, f.add_short_train1_carmen), axis=1)
+    # np.save(
+    #     "train_short\\carmen\\best" + 'area_' + str(1) + '_' + "carmen"+ '_features_extra_validation_' + str(len(train_1)) + '_signals.npy',
+    #     np.array(train_1))
+    # train_2 = np.concatenate((f.short_train2_carmen, f.add_short_train2_carmen), axis=1)
+    # np.save(
+    #     "train_short\\carmen\\best" + 'area_' + str(2) + '_' + "carmen"+ '_features_extra_validation_' + str(len(train_2)) + '_signals.npy',
+    #     np.array(train_2))
+    # train_3 = np.concatenate((f.short_train3_carmen, f.add_short_train3_carmen), axis=1)
+    # np.save(
+    #     "train_short\\carmen\\best" + 'area_' + str(3) + '_' + "carmen"+ '_features_extra_validation_' + str(len(train_3)) + '_signals.npy',
+    #     np.array(train_3))
+    # train_4 = np.concatenate((f.short_train4_carmen, f.add_short_train4_carmen), axis=1)
+    # np.save(
+    #     "train_short\\carmen\\best" + 'area_' + str(4) + '_' + "carmen"+ '_features_extra_validation_' + str(len(train_4)) + '_signals.npy',
+    #     np.array(train_4))
+    #
+    #
+    # test_1 = np.concatenate((f.short_test1_carmen, f.add_short_test1_carmen), axis=1)
+    # np.save(
+    #     "test_short\\carmen\\best\\" + 'area_' + str(1) + '_' + "carmen"+ '_features_extra_validation_' + str(len(test_1)) + '_signals.npy',
+    #     np.array(test_1))
+    # test_2 = np.concatenate((f.short_test2_carmen, f.add_short_test2_carmen), axis=1)
+    # np.save(
+    #     "test_short\\carmen\\best\\" + 'area_' + str(2) + '_' + "carmen"+ '_features_extra_validation_' + str(len(test_2)) + '_signals.npy',
+    #     np.array(test_2))
+    # test_3 = np.concatenate((f.short_test3_carmen, f.add_short_test3_carmen), axis=1)
+    # np.save(
+    #     "test_short\\carmen\\best\\" + 'area_' + str(3) + '_' + "carmen"+ '_features_extra_validation_' + str(len(test_3)) + '_signals.npy',
+    #     np.array(test_3))
+    # test_4 = np.concatenate((f.short_test4_carmen, f.add_short_test4_carmen), axis=1)
+    # np.save(
+    #     "test_short\\carmen\\best\\" + 'area_' + str(4) + '_' + "carmen"+ '_features_extra_validation_' + str(len(test_4)) + '_signals.npy',
+    #     np.array(test_4))
+
+
+# resize_features_vector(f.short_train1_carmen, f.add_short_train1_carmen)
+# resize_features_vector(f.short_train2_carmen, f.add_short_train2_carmen)
+# resize_features_vector(f.short_train3_carmen, f.add_short_train3_carmen)
+# resize_features_vector(f.short_train4_carmen, f.add_short_train4_carmen)
+# #
+# resize_features_vector(f.short_test1_carmen, f.add_short_test1_carmen)
+# resize_features_vector(f.short_test2_carmen, f.add_short_test2_carmen)
+# # resize_features_vector(f.short_test3_carmen, f.add_short_test3_carmen)
+# # resize_features_vector(f.short_test4_carmen, f.add_short_test4_carmen)
+    x_train = getX(f.short_train1_carmen, f.short_train2_carmen, f.short_train3_carmen, f.short_train4_carmen)
+    y_train = getY(f.short_train1_carmen, f.short_train2_carmen, f.short_train3_carmen, f.short_train4_carmen)
+# #     x_train = getX(train_1, train_2, train_3, train_4)
+# #     y_train = getY(train_1, train_2, train_3, train_4)
+# # # # #
+# #     x_test = getX(test_1, test_2, test_3, test_4)
+# #     y_test = getY(test_1, test_2, test_3, test_4)
+# # # #     # #     #
+    x_test = getX(f.short_test1_carmen, f.short_test2_carmen, f.short_test3_carmen, f.short_test4_carmen)
+    y_test = getY(f.short_test1_carmen, f.short_test2_carmen, f.short_test3_carmen, f.short_test4_carmen)
 # #     # # #
-# #     # x_train = getX(f.train1_carmen, f.train2_carmen, f.train3_carmen, f.train4_carmen)
-# #     # y_train = getY(f.train1_carmen, f.train2_carmen, f.train3_carmen, f.train4_carmen)
+#     x_train = getX(f.train1_carmen, f.train2_carmen, f.train3_carmen, f.train4_carmen)
+#     y_train = getY(f.train1_carmen, f.train2_carmen, f.train3_carmen, f.train4_carmen)
 # #     #
 # #     # x_test = getX(f.test1_carmen, f.test2_carmen, f.test3_carmen, f.test4_carmen)
 # #     # y_test = getY(f.test1_carmen, f.test2_carmen, f.test3_carmen, f.test4_carmen)
 #
-#     # SVM(x_train,y_train, x_test,y_test)
-#     randomForest(x_train,y_train, x_test,y_test)
-#     # GradientBoosting(x_train,y_train, x_test,y_test)
-#     # SVMovr(x_train,y_train, x_test,y_test)
-#     # linearSVC(x_train,y_train, x_test,y_test)
-#     # KNeighbors(x_train, y_train, x_test, y_test)
-#     mutualInfo(x_test, y_test, "carmen - test")
-#     mutualInfo(x_train, y_train, "carmen - train")
-#
+    # SVM(x_train,y_train, x_test,y_test)
+    # randomForest(x_train,y_train, x_test,y_test)
+    # GradientBoosting(x_train,y_train, x_test,y_test)
+    # SVMovr(x_train,y_train, x_test,y_test)
+    # linearSVC(x_train,y_train, x_test,y_test)
+    KNeighbors(x_train, y_train, x_test, y_test)
+    # mutualInfo(x_test, y_test, "carmen - test")
+    # mutualInfo(x_train, y_train, "carmen - train")
+# #
 # # #     print(f.short_test1_carmen)
 # # #     print("--------------")
 # # #     print(f.short_test2_carmen)
+ #
+# KNeighbors Accuracy: 0.6909302325581396
+# Random Forest Accuracy: 0.651860465116279
